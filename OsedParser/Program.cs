@@ -38,7 +38,6 @@ namespace OsedParser
                     string help = "ЗАПУСКАЙТЕ ПРОГРАММУ С ПАРАМЕТРОМ!\nOsedStarter.bat файл или в планировщике параметр \"--pass <gudkov_password>\" у задания Osed";
                     if ((args.Length < 2 || args[0].Trim() != "--pass") && pass == "")
                     {
-                        pass = (pass == "") ? args[1].Trim() : pass;
                         if (isServer())
                         {
                             sql.WriteLog(help);
@@ -52,6 +51,7 @@ namespace OsedParser
                     }
                     else
                     {
+                        pass = (pass == "") ? args[1].Trim() : pass;
                         Console.WriteLine("MachineName: {0}", Environment.MachineName.ToUpper());
                         Console.WriteLine("Passord: {0}", pass);
 

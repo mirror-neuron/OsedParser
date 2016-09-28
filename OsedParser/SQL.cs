@@ -72,7 +72,7 @@ namespace OsedParser
             (new SqlCommand(@"INSERT INTO [dbo].[awf_ExtensionProcesses]
                ([RowID], [CardID], [OperationType], [ProcessType], [ProcessTime], [CreationTime])
                 VALUES
-               (NEWID(), NEWID(), 'CreateCardFromOsed', 'CreateCardFromOsed', GETDATE(), GETDATE())", sqlConnection)).ExecuteNonQuery();
+               (NEWID(), NEWID(), 'CreateCardFromOsed', 'CreateCardFromOsed', GETDATE(), GETDATE());", sqlConnection)).ExecuteNonQuery();
         }
 
         /// <summary>

@@ -160,7 +160,7 @@ namespace OsedParser
                                 }
                                 else
                                 {
-                                    newCard = false;
+                                    //newCard = false;
                                 }
                             }
                             catch (NoSuchElementException)
@@ -246,7 +246,7 @@ namespace OsedParser
                 catch (NoSuchElementException)
                 { }
 
-                //parse toName
+                //парсинг Кому
                 //
                 try
                 {
@@ -264,7 +264,7 @@ namespace OsedParser
                 catch (NoSuchElementException)
                 { }
 
-                //parse fromName
+                //парсинг От кого
                 try
                 {
                     if (card.CardType == "ВХ")
@@ -276,7 +276,7 @@ namespace OsedParser
                 catch (NoSuchElementException)
                 { }
 
-                //parse signName
+                //парсинг Подпись
                 try
                 {
                     if (card.CardType != "ВХ")
@@ -288,7 +288,7 @@ namespace OsedParser
                 catch (NoSuchElementException)
                 { }
 
-                //parse performName
+                //парсинг Исполнитель
                 //
                 try
                 {
@@ -297,7 +297,7 @@ namespace OsedParser
                 catch (NoSuchElementException)
                 { }
 
-                //parse summary
+                //парсинг Краткого содержания
                 //
                 try
                 {
@@ -310,8 +310,8 @@ namespace OsedParser
                 catch (NoSuchElementException)
                 {
                 }
-                
-                //parse responesTo
+
+                //парсинг На №
                 //
                 card.References = new List<Tuple<bool, string, string, string>>();
                 try
@@ -332,7 +332,7 @@ namespace OsedParser
                 catch (NoSuchElementException)
                 {}
 
-                //parse references
+                //парсинг На документ ссылаются:
                 //
                 try
                 {
@@ -353,7 +353,7 @@ namespace OsedParser
                 {
                 }
 
-                //parse attachments
+                //парсинг приложенных файлов
                 //
                 try
                 {
@@ -406,7 +406,7 @@ namespace OsedParser
                 {
                 }
 
-                //save html
+                //парсинг html документа для печати
                 //
                 try
                 {
@@ -438,7 +438,7 @@ namespace OsedParser
                 catch (NoSuchElementException)
                 { }
                 
-                //parse print file
+                //парсинг файла для печати
                 //
                 try
                 {
