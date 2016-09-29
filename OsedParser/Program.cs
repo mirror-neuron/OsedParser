@@ -20,11 +20,12 @@ namespace OsedParser
         {
             get { return isServer() ? "DV54" : "DV54_Test"; }
         }
+        //различные настройки: для боевого сервера - бой, для остальных тест
         private static bool isServer()
         {
             return Environment.MachineName.ToUpper().Contains("DOCS") && Environment.MachineName.ToUpper().Contains("BASE");
         }
-        private static ParserState testingOrReal = ParserState.Real;
+        private static LinkGetterPageState testingOrReal = LinkGetterPageState.AllPage;
         private static string defaultPassord = "";
 
         static void Main(string[] args)
@@ -83,7 +84,7 @@ namespace OsedParser
                     Console.WriteLine("Activate ActionWorflow process...");
                     sql.activateAWProcess();
                     System.Threading.Thread.Sleep(5000);
-                    if (testingOrReal == ParserState.Testing)
+                    if (testingOrReal == LinkGetterPageState.FirstPage)
                         Console.ReadKey();
                 }
             }

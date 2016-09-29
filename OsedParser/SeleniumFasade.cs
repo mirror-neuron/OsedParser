@@ -6,16 +6,26 @@ using OpenQA.Selenium;
 
 namespace OsedParser
 {
+    //автоматический выбор тулзы для скачивания
     public enum FileDownloadingTool
     {
         Selenium,
         WebClient
     }
 
-    public enum ParserState
+    //режим захвата ссылок: по всем страницам или только первой (первые 30 карт)
+    public enum LinkGetterPageState
     {
-        Testing,    //для тестирования, парсит только первые 30 карт
-        Real
+        FirstPage,
+        AllPage
+    }
+
+    //режим захвата ссылок: забирает до первого сохраненного документа или всё подряд обновляет
+    //
+    public enum LinkGetterSyncState
+    {
+        AllLinks,
+        OnlyNewLinks
     }
 
     class SeleniumFasade : IDisposable
@@ -44,7 +54,7 @@ namespace OsedParser
                 driver.Navigate().GoToUrl(Program.baseURL);
                 dnsId = Regex.Match(driver.Url, @"(?<=DNSID=)(\w*)").Value;
 
-                //ssl expired?
+                //если ssl устарела, то используем для скачивания селениум, иначе вебклиент
                 try
                 {
                     driver.FindElement(By.XPath(".//*[@id='errorCode']"));
@@ -87,10 +97,9 @@ namespace OsedParser
         /// <summary>
         /// Отдает ссылки на карты путем перехода на все страницы
         /// </summary>
-        public void GetCardLinks(ParserState parserState = ParserState.Real)
+        public void GetCardLinks(LinkGetterPageState parserState = LinkGetterPageState.AllPage, LinkGetterSyncState syncState = LinkGetterSyncState.AllLinks)
         {
-            if (parserState == ParserState.Testing)
-                sql.DeleteAll();
+            //  sql.DeleteAll(); //грохнуть таблы
             cardLinks = new List<int>();
             int pageNumb = 1;
 
@@ -98,9 +107,9 @@ namespace OsedParser
             {
                 ReadOnlyCollection<IWebElement> tableElements;
 
-                bool newCard = true;
+                bool getNextLink = true;
 
-                while (newCard)
+                while (getNextLink)
                 {
                     //переход на следующую страницу
                     //
@@ -137,7 +146,7 @@ namespace OsedParser
                     try
                     {
                         driver.FindElement(By.XPath("//*[@id='mtable']/tbody/tr/td[text()[normalize-space(.)='Нет записей.']]"));
-                        newCard = false;
+                        getNextLink = false;
                         tableElements = null;
                     }
                     catch (NoSuchElementException)
@@ -158,19 +167,19 @@ namespace OsedParser
                                 {
                                     cardLinks.Add(link);
                                 }
-                                else
+                                else if(syncState == LinkGetterSyncState.OnlyNewLinks)
                                 {
-                                    //newCard = false;
+                                    getNextLink = false;
                                 }
                             }
                             catch (NoSuchElementException)
                             { }
-                            if (!newCard)
+                            if (!getNextLink)
                                 break;
                         }
                     }
 
-                    if (!newCard || parserState == ParserState.Testing)
+                    if (!getNextLink || parserState == LinkGetterPageState.FirstPage)
                     {
                         break;
                     }
@@ -183,8 +192,8 @@ namespace OsedParser
                 //логирование
                 Logger.WriteToBase(ex);
             }
-            cardLinks.Reverse();
-            cardLinks.AddRange(sql.getNotSynchronized());
+            cardLinks.Reverse();                            //парсим сначало самые старые доки
+            cardLinks.AddRange(sql.getNotSynchronized());   //а потом пробуем ошибочные
         }
 
         public void ParseCards()
@@ -217,9 +226,9 @@ namespace OsedParser
                 catch (NoSuchElementException)
                 { }
                 try
-                { 
-                    card.DocDate = driver.FindElement(By.XPath(
-                        "//acronym[text()[normalize-space(.)='Дата документа:']]/../following-sibling::td[1]")).Text;
+                {
+                    card.DocDate = driver.FindElement(By.XPath("//*[@id='maintable']/tbody/tr[1]/td[4]")).Text;
+                        //driver.FindElement(By.XPath("//acronym[text()[normalize-space(.)='Дата документа:']]/../following-sibling::td[1]")).Text;
                 }
                 catch (NoSuchElementException)
                 { }
