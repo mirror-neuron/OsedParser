@@ -6,7 +6,6 @@ using System.IO;
 
 namespace OsedParser
 {
-
     public sealed class SQL : IDisposable
     {
         private SqlConnection sqlConnection;
@@ -21,7 +20,7 @@ namespace OsedParser
         }
 
         /// <summary>
-        /// Check that connection is open
+        /// Проверяем не пропал ли коннект к базе и пытаемся восстановить
         /// </summary>
         private void CheckConnection()
         {
@@ -66,6 +65,9 @@ namespace OsedParser
             (new SqlCommand(command, sqlConnection)).ExecuteNonQuery();
         }
 
+        /// <summary>
+        /// Кидаю активность 
+        /// </summary>
         public void activateAWProcess()
         {
             CheckConnection();

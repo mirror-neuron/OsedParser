@@ -6,26 +6,33 @@ using OpenQA.Selenium;
 
 namespace OsedParser
 {
-    //автоматический выбор тулзы для скачивания
+    /// <summary>
+    /// режим захвата страниц со ссылками: только первой (30 карт)
+    /// только страницы без сохранненых доках или по всем
+    /// </summary>
+    public enum LinkGetterPageState
+    {
+        FirstPage,
+        PageWithoutOldLinks,
+        AllPage
+    }
+
+    /// <summary>
+    /// режим захвата ссылок: только новые или всё подряд на выбраных страницах
+    /// </summary>
+    public enum LinkGetterSyncState
+    {
+        OnlyNewLinks,
+        AllLinksOnPages
+    }
+
+    /// <summary>
+    /// автоматический выбор тулзы для скачивания
+    /// </summary>
     public enum FileDownloadingTool
     {
         Selenium,
         WebClient
-    }
-
-    //режим захвата ссылок: по всем страницам или только первой (первые 30 карт)
-    public enum LinkGetterPageState
-    {
-        FirstPage,
-        AllPage
-    }
-
-    //режим захвата ссылок: забирает до первого сохраненного документа или всё подряд обновляет
-    //
-    public enum LinkGetterSyncState
-    {
-        AllLinks,
-        OnlyNewLinks
     }
 
     class SeleniumFasade : IDisposable
@@ -97,7 +104,7 @@ namespace OsedParser
         /// <summary>
         /// Отдает ссылки на карты путем перехода на все страницы
         /// </summary>
-        public void GetCardLinks(LinkGetterPageState parserState = LinkGetterPageState.AllPage, LinkGetterSyncState syncState = LinkGetterSyncState.AllLinks)
+        public void GetCardLinks(LinkGetterPageState parserState = LinkGetterPageState.AllPage, LinkGetterSyncState syncState = LinkGetterSyncState.AllLinksOnPages)
         {
             //  sql.DeleteAll(); //грохнуть таблы
             cardLinks = new List<int>();
@@ -117,6 +124,7 @@ namespace OsedParser
                     driver.Navigate().GoToUrl(String.Format("{0}?type=0&DNSID={1}#page-{2}", Program.baseURL, dnsId, pageNumb));
 
                     //загрузилось?
+                    //
                     driver.WaitForElementLoad(5, By.XPath("//*[@id='mtable']/tbody/tr[1]/td[4]"));
                     if (pageNumb > 1)
                     {
@@ -163,19 +171,25 @@ namespace OsedParser
                                 int link =
                                     Convert.ToInt32(Regex.Match(element.FindElement(By.XPath("./td[4]/a")).GetAttribute("href"),
                                         "(?<=id=)([0-9]*)(?=&)").Value);
-                                if (!sql.CardLinkExist(link))
+                                if (syncState == LinkGetterSyncState.AllLinksOnPages)   //все подряд на странице
                                 {
                                     cardLinks.Add(link);
                                 }
-                                else if(syncState == LinkGetterSyncState.OnlyNewLinks)
+                                else if (!sql.CardLinkExist(link))  //забираем только новые
+                                {
+                                    cardLinks.Add(link);
+                                }
+
+                                //на странице только новые ссылки?
+                                if(parserState == LinkGetterPageState.PageWithoutOldLinks && !sql.CardLinkExist(link))
                                 {
                                     getNextLink = false;
                                 }
                             }
                             catch (NoSuchElementException)
                             { }
-                            if (!getNextLink)
-                                break;
+                            //if (!getNextLink)
+                            //  break;
                         }
                     }
 
@@ -196,6 +210,9 @@ namespace OsedParser
             cardLinks.AddRange(sql.getNotSynchronized());   //а потом пробуем ошибочные
         }
 
+        /// <summary>
+        /// парсинг и запись/обновление выбраных карточек
+        /// </summary>
         public void ParseCards()
         {
             foreach (var cardLink in cardLinks)
@@ -496,6 +513,9 @@ namespace OsedParser
             }
         }
 
+        /// <summary>
+        /// Закрытие сессии страницы и браузера
+        /// </summary>
         public void Dispose()
         {
             Console.WriteLine("Exit...");

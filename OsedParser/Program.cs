@@ -6,12 +6,17 @@ namespace OsedParser
 {
     class Program
     {
+        //текущий режим парсера и другие константы
+        private static LinkGetterPageState linkGetterPageState = LinkGetterPageState.AllPage;
+        private static LinkGetterSyncState linkGetterSyncState = LinkGetterSyncState.OnlyNewLinks;
+        private static string defaultPassord = "";
         public const string baseURL = @"https://osed.mintrans.ru/";
+
+        //различные настройки: для боевого сервера - бой, для остальных тест
         public static string tempStoragePath
         {
             get { return isServer() ? @"D:\Osed\Temp\" : @"D:\Sources\DV5\OsedParser\Temp\"; }
         }
-
         private static string dbName
         {
             get { return isServer() ? "docsbase5" : "docsvisionbase"; }
@@ -20,17 +25,13 @@ namespace OsedParser
         {
             get { return isServer() ? "DV54" : "DV54_Test"; }
         }
-        //различные настройки: для боевого сервера - бой, для остальных тест
         private static bool isServer()
         {
             return Environment.MachineName.ToUpper().Contains("DOCS") && Environment.MachineName.ToUpper().Contains("BASE");
         }
-        private static LinkGetterPageState testingOrReal = LinkGetterPageState.AllPage;
-        private static string defaultPassord = "";
 
         static void Main(string[] args)
         {
-
             using (var sql = new SQL(dbName, dbCatalog))
             {
                 try
@@ -66,7 +67,7 @@ namespace OsedParser
                         {
                             selenium.Login(pass);
 
-                            selenium.GetCardLinks(testingOrReal);
+                            selenium.GetCardLinks(linkGetterPageState, linkGetterSyncState);
 
                             selenium.ParseCards();
                         }
@@ -84,7 +85,7 @@ namespace OsedParser
                     Console.WriteLine("Activate ActionWorflow process...");
                     sql.activateAWProcess();
                     System.Threading.Thread.Sleep(5000);
-                    if (testingOrReal == LinkGetterPageState.FirstPage)
+                    if (linkGetterPageState == LinkGetterPageState.FirstPage)
                         Console.ReadKey();
                 }
             }
